@@ -1,4 +1,4 @@
-# To crawl job information at midnight and save it in a database.
+# To crawl job information at midnight automatically and save it in a database.
 
 ## requirements.txt
 
