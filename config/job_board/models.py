@@ -21,7 +21,7 @@ class Jobkorea(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
-        unique_together = ('company', 'position')
+        unique_together = ('company', 'detail')
         
 class Saramin(models.Model):
     company = models.CharField(max_length=100)
@@ -32,5 +32,5 @@ class Saramin(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
-        unique_together = ('company', 'position')
+        unique_together = ('company', 'detail')
 
