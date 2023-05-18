@@ -1,41 +1,30 @@
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.pagination import PageNumberPagination
 from .models import Wanted, Jobkorea, Saramin
 from .serializers import WantedSerializer, JobkoreaSerializer, SaraminSerializer
-from django.views.generic import TemplateView
 
-class CustomPagination(PageNumberPagination):
-    page_size = 10
-    page_size_query_param = 'page_size'
-    max_page_size = 100
+class PagePagination(PageNumberPagination):
+    page_size = 20
 
-class WantedListAPIView(APIView):
-    pagination_class = CustomPagination
-
+class JobListAPIView(APIView):
     def get(self, request, *args, **kwargs):
-        queryset = Wanted.objects.all().order_by('-created_at')
-        page = self.pagination_class().paginate_queryset(queryset, request)
-        serializer = WantedSerializer(page, many=True)
-        return Response(serializer.data)
+        paginator = PagePagination()
+        job_type = request.query_params.get('type')
 
-class JobkoreaListAPIView(APIView):
-    pagination_class = CustomPagination
+        if job_type == 'wanted':
+            queryset = Wanted.objects.all().order_by('-created_at')
+            serializer_class = WantedSerializer
+        elif job_type == 'jobkorea':
+            queryset = Jobkorea.objects.all().order_by('-created_at')
+            serializer_class = JobkoreaSerializer
+        elif job_type == 'saramin':
+            queryset = Saramin.objects.all().order_by('-created_at')
+            serializer_class = SaraminSerializer
+        else:
+            return Response({"error": "Invalid type parameter"}, status=400)
 
-    def get(self, request, *args, **kwargs):
-        queryset = Jobkorea.objects.all().order_by('-created_at')
-        page = self.pagination_class().paginate_queryset(queryset, request)
-        serializer = JobkoreaSerializer(page, many=True)
-        return Response(serializer.data)
+        context = paginator.paginate_queryset(queryset, request)
+        serializer = serializer_class(context, many=True)
 
-class SaraminListAPIView(APIView):
-    pagination_class = CustomPagination
-
-    def get(self, request, *args, **kwargs):
-        queryset = Saramin.objects.all().order_by('-created_at')
-        page = self.pagination_class().paginate_queryset(queryset, request)
-        serializer = SaraminSerializer(page, many=True)
-        return Response(serializer.data)
-
-class JobBoardTemplateView(TemplateView):
-    template_name = "frontend/index.html"
+        return paginator.get_paginated_response(serializer.data)
